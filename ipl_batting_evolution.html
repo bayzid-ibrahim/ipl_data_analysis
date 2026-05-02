@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IPL Batting Evolution — How Batsmen Conquered the Game</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2128;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #f0883e;
+    --accent2: #58a6ff;
+    --accent3: #3fb950;
+    --accent4: #bc8cff;
+    --red: #f85149;
+    --gold: #d29922;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, #1a0a00 0%, #0d1117 40%, #001a33 100%);
+    padding: 70px 40px 50px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(240,136,62,0.12) 0%, transparent 70%);
+  }
+  .hero h1 {
+    font-size: clamp(26px, 5vw, 52px);
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #f0883e, #f8d070);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    position: relative;
+  }
+  .hero .sub {
+    margin-top: 14px;
+    color: var(--muted);
+    font-size: 17px;
+    max-width: 620px;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+  }
+  .hero .badge {
+    display: inline-block;
+    background: rgba(240,136,62,0.15);
+    border: 1px solid rgba(240,136,62,0.3);
+    color: var(--accent);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  /* LAYOUT */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* SECTION */
+  section { padding: 60px 0; border-bottom: 1px solid var(--border); }
+  section:last-child { border-bottom: none; }
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .section-title {
+    font-size: clamp(22px, 3.5vw, 32px);
+    font-weight: 700;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+  }
+  .section-body {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.75;
+    max-width: 780px;
+    margin-bottom: 36px;
+  }
+  .section-body strong { color: var(--text); }
+
+  /* STAT CARDS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent-color, var(--accent));
+  }
+  .stat-card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .stat-card .value { font-size: 32px; font-weight: 800; color: var(--accent-color, var(--accent)); line-height: 1; }
+  .stat-card .desc { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  /* CHART CONTAINER */
+  .chart-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+  .chart-box h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .chart-box .chart-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+  .chart-wrap { position: relative; height: 300px; }
+  .chart-wrap-tall { position: relative; height: 360px; }
+
+  /* TWO COLUMNS */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* TIMELINE */
+  .timeline { position: relative; padding-left: 28px; }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 8px; top: 8px; bottom: 8px;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--accent), var(--accent2));
+  }
+  .tl-item {
+    position: relative;
+    margin-bottom: 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+  }
+  .tl-item::before {
+    content: '';
+    position: absolute;
+    left: -25px;
+    top: 22px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--dot-color, var(--accent));
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 0 2px var(--dot-color, var(--accent));
+  }
+  .tl-year {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--dot-color, var(--accent));
+    margin-bottom: 4px;
+  }
+  .tl-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+  .tl-body { font-size: 14px; color: var(--muted); line-height: 1.65; }
+  .tl-body strong { color: var(--text); }
+
+  /* INSIGHT CARDS */
+  .insights-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; margin-top: 32px; }
+  .insight-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 20px;
+  }
+  .insight-icon { font-size: 28px; margin-bottom: 10px; }
+  .insight-title { font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+  .insight-body { font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .insight-body strong { color: var(--text); }
+
+  /* HIGHLIGHT QUOTE */
+  .highlight-quote {
+    background: linear-gradient(135deg, rgba(240,136,62,0.08), rgba(88,166,255,0.06));
+    border: 1px solid rgba(240,136,62,0.25);
+    border-left: 4px solid var(--accent);
+    border-radius: 10px;
+    padding: 24px 28px;
+    margin: 32px 0;
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  /* FOOTER */
+  .footer {
+    text-align: center;
+    padding: 40px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="badge">IPL Data Analysis · 2008–2026</div>
+  <h1>How Batsmen Conquered IPL</h1>
+  <p class="sub">A data-driven story of run-scoring evolution, momentum shifts, and the rise of the batting era across 18 seasons of the Indian Premier League.</p>
+</div>
+
+<!-- SECTION 1: KEY NUMBERS -->
+<section>
+  <div class="container">
+    <div class="section-label">The Big Picture</div>
+    <div class="section-title">IPL By The Numbers</div>
+    <p class="section-body">
+      Across <strong>287,353 deliveries</strong> and over <strong>1,500 innings</strong>, the IPL dataset tells a clear story:
+      scores are high, batsmen dominate, and the game has become a relentless attacking contest.
+    </p>
+    <div class="stats-grid">
+      <div class="stat-card" style="--accent-color: #f0883e">
+        <div class="label">Median Score</div>
+        <div class="value">167</div>
+        <div class="desc">Runs per innings (overall)</div>
+      </div>
+      <div class="stat-card" style="--accent-color: #58a6ff">
+        <div class="label">200+ Scores</div>
+        <div class="value">15.9%</div>
+        <div class="desc">of all innings hit 200 or more</div>
+      </div>
+      <div class="stat-card" style="--accent-color: #3fb950">
+        <div class="label">Avg Run Rate</div>
+        <div class="value">8.05</div>
+        <div class="desc">Overall (powerplay)</div>
+      </div>
+      <div class="stat-card" style="--accent-color: #bc8cff">
+        <div class="label">Death Over RR</div>
+        <div class="value">8.37</div>
+        <div class="desc">Overs 16–20 average run rate</div>
+      </div>
+      <div class="stat-card" style="--accent-color: #d29922">
+        <div class="label">Avg Extras</div>
+        <div class="value">8.84</div>
+        <div class="desc">Per innings (incl. 5.3 wides)</div>
+      </div>
+      <div class="stat-card" style="--accent-color: #f85149">
+        <div class="label">180+ Innings</div>
+        <div class="value">34.3%</div>
+        <div class="desc">More than 1 in 3 innings!</div>
+      </div>
+    </div>
+
+    <div class="highlight-quote">
+      📊 The median IPL innings score is <strong>167 runs</strong> — meaning half of all innings score more than that. In early T20 cricket globally, a 160 was considered a very good score. Today in IPL, it's average.
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 2: SCORE DISTRIBUTION -->
+<section>
+  <div class="container">
+    <div class="section-label">Scoring Landscape</div>
+    <div class="section-title">Where Do Innings Scores Land?</div>
+    <p class="section-body">
+      The score distribution reveals a league that has firmly moved into high-scoring territory.
+      Only <strong>3.7%</strong> of innings fail to reach 120, while a massive <strong>33%</strong>
+      cross 180 — a threshold that would once have been considered near-impossible in T20 cricket.
+    </p>
+    <div class="two-col">
+      <div class="chart-box">
+        <h3>Score Distribution</h3>
+        <div class="chart-sub">% of innings in each run bracket</div>
+        <div class="chart-wrap">
+          <canvas id="scoreDistChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-box">
+        <h3>1st vs 2nd Innings</h3>
+        <div class="chart-sub">Average score comparison (first innings bats first)</div>
+        <div class="chart-wrap">
+          <canvas id="inningsCompChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 3: OVER-BY-OVER -->
+<section>
+  <div class="container">
+    <div class="section-label">Innings Anatomy</div>
+    <div class="section-title">The Shape of an IPL Innings</div>
+    <p class="section-body">
+      The data reveals IPL's distinctive scoring shape — <strong>an explosive powerplay</strong>,
+      a brief middle-overs consolidation, and then an accelerating crescendo through the death overs.
+      This "smiley curve" of run scoring has become increasingly pronounced, with overs 19 and 20
+      now averaging over <strong>18–20 runs</strong> each.
+    </p>
+    <div class="chart-box">
+      <h3>Runs Per Over — Across a Typical IPL Innings</h3>
+      <div class="chart-sub">Average runs scored in each over (overs 1–20)</div>
+      <div class="chart-wrap-tall">
+        <canvas id="overRunsChart"></canvas>
+      </div>
+    </div>
+    <div class="insights-grid">
+      <div class="insight-card">
+        <div class="insight-icon">⚡</div>
+        <div class="insight-title">Powerplay Power</div>
+        <div class="insight-body">Overs 1–6 average <strong>~6–16 runs each</strong>, with a sharp ramp as batsmen attack from ball one. Modern openers treat even over 1 as an opportunity, not a feeling-out period.</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-icon">🛡️</div>
+        <div class="insight-title">Middle Overs Myth</div>
+        <div class="insight-body">Overs 7–15 average <strong>~13–15 runs</strong> — far higher than spinners would like. The "middle overs slowdown" is largely a myth in modern IPL; batsmen attack even here.</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-icon">💥</div>
+        <div class="insight-title">Death Overs Explosion</div>
+        <div class="insight-body">Overs 17–20 average <strong>16–20+ runs</strong> each. Over 20 regularly sees batting teams targeting 18–25 runs. Death bowling is the single hardest skill in the game.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 4: BATTING POSITIONS -->
+<section>
+  <div class="container">
+    <div class="section-label">The Batting Revolution</div>
+    <div class="section-title">Strike Rate by Batting Position</div>
+    <p class="section-body">
+      Every batting position in IPL now operates at a high strike rate. Openers average <strong>136–138</strong>,
+      but perhaps the most remarkable shift is in the middle order — positions 4 through 7
+      maintaining strike rates of <strong>127–130</strong>. Even lower-order batsmen contribute
+      meaningfully. The era of the "blocker" is over.
+    </p>
+    <div class="chart-box">
+      <h3>Average Strike Rate by Batting Position</h3>
+      <div class="chart-sub">Mean strike rate across all deliveries (min. 10 balls faced)</div>
+      <div class="chart-wrap-tall">
+        <canvas id="srByPosChart"></canvas>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="chart-box">
+        <h3>Death Over Strike Rates</h3>
+        <div class="chart-sub">By batting type (overs 16–20)</div>
+        <div class="chart-wrap">
+          <canvas id="deathSRChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-box">
+        <h3>Wickets Lost by Phase</h3>
+        <div class="chart-sub">Average cumulative wickets at end of each phase</div>
+        <div class="chart-wrap">
+          <canvas id="wicketsPhaseChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="highlight-quote">
+      🔥 Top-order batsmen at the death (overs 16–20) operate at a stunning <strong>148 strike rate</strong> — meaning they score nearly 1.5 runs per ball. This is the calling card of IPL's batting era: no phase of the game is considered "defensive" anymore.
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 5: BOWLING ECONOMY -->
+<section>
+  <div class="container">
+    <div class="section-label">The Other Side</div>
+    <div class="section-title">Bowlers Under Siege — Economy by Phase</div>
+    <p class="section-body">
+      Bowling in IPL has become extraordinarily difficult. The data shows economy rates
+      climbing from an average of <strong>7.0 in the powerplay</strong> to <strong>8.2 in the death overs</strong>.
+      Even "good" death bowling today would be 8–9 runs per over — a number that would have
+      been shocking in the early seasons of IPL.
+    </p>
+    <div class="chart-box">
+      <h3>Bowler Economy Rate by Innings Phase</h3>
+      <div class="chart-sub">Distribution of economy rates across powerplay, middle, and death overs</div>
+      <div class="chart-wrap">
+        <canvas id="economyPhaseChart"></canvas>
+      </div>
+    </div>
+
+    <div class="insights-grid">
+      <div class="insight-card">
+        <div class="insight-icon">🎯</div>
+        <div class="insight-title">Powerplay: Least Punished</div>
+        <div class="insight-body">Economy of <strong>7.0</strong> in overs 1–6. Fielding restrictions help batsmen, but pace bowlers can still swing the ball. This is where top quicks find most value.</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-icon">🌀</div>
+        <div class="insight-title">Middle: Spinner's Trap</div>
+        <div class="insight-body">Economy of <strong>7.5</strong> in overs 7–15. Spinners dominate this phase but are increasingly targeted. A "good" economy here is under 7.0.</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-icon">🚨</div>
+        <div class="insight-title">Death: Survival Mode</div>
+        <div class="insight-body">Economy of <strong>8.2</strong> in overs 16–20. The average bowler concedes 8+ per over. Death specialists who go for under 9 are extremely valuable.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 6: HISTORICAL NARRATIVE -->
+<section>
+  <div class="container">
+    <div class="section-label">Historical Narrative</div>
+    <div class="section-title">Season-by-Season: The Batting Era Unfolds</div>
+    <p class="section-body">
+      While this dataset doesn't carry season labels, the historical arc of IPL batting evolution is well-documented.
+      Here's how the game changed decade by decade — and which moments were the true turning points.
+    </p>
+
+    <div class="timeline">
+
+      <div class="tl-item" style="--dot-color: #58a6ff">
+        <div class="tl-year">2008–2010 · The Founding Era</div>
+        <div class="tl-title">A Different Game — Cautious, Lower Scoring</div>
+        <div class="tl-body">
+          The inaugural IPL seasons saw <strong>average scores of around 145–155</strong>. Batsmen respected the format's novelty; teams often batted conservatively in the middle overs. Iconic moments came from individual brilliance (Brendon McCullum's 158* in Match 1), not systematic aggression. Bowlers like <strong>Sohail Tanvir and RP Singh</strong> dominated at economies under 6. The powerplay was still treated as a "settling in" phase by many sides.
+        </div>
+      </div>
+
+      <div class="tl-item" style="--dot-color: #3fb950">
+        <div class="tl-year">2011–2013 · The Acceleration</div>
+        <div class="tl-title">Chris Gayle Changes Everything</div>
+        <div class="tl-body">
+          <strong>2012 was the turning point.</strong> Chris Gayle's 175* off 66 balls for RCB vs Pune Warriors — still the highest individual score in T20 cricket — redefined what was possible. Teams began targeting 180+ systematically. <strong>Gayle's strike rate of ~180+</strong> proved you could attack from ball one. Scores crept past 160 as the norm. The first wave of "impact" batsmen began reshaping team selections — aggressive middle-order players over defensive anchors.
+        </div>
+      </div>
+
+      <div class="tl-item" style="--dot-color: #f0883e">
+        <div class="tl-year">2013–2016 · The Death Overs Arms Race</div>
+        <div class="tl-title">The Rise of Death Hitting</div>
+        <div class="tl-body">
+          Teams realised they needed specialists for overs 17–20. <strong>MS Dhoni's helicopter shot, Kieron Pollard's brute power, and AB de Villiers' 360-degree batting</strong> elevated the death phase into a scoring bonanza. Average scores climbed toward 160–170. Bowlers began developing specialist death-over variations — yorkers, slower balls, bouncers — as a direct arms race. The middle overs began to open up too, as batsmen stopped "playing themselves in."
+        </div>
+      </div>
+
+      <div class="tl-item" style="--dot-color: #bc8cff">
+        <div class="tl-year">2017–2019 · The 200 Becomes Normal</div>
+        <div class="tl-title">The 200-Run Barrier Falls Routinely</div>
+        <div class="tl-body">
+          The <strong>2017–2018 seasons</strong> saw 200+ scores becoming almost routine rather than exceptional events. Data from the full dataset shows <strong>15.9% of all innings now cross 200</strong> — approximately 1 in 6. The middle order expanded to include power-hitters at positions 5, 6, and 7. <strong>Andre Russell (KKR)</strong> became the archetype of the modern #6 — a batsman who can score 40 off 15 balls and change a match in a single over. Teams began hiring coaches specifically for batting power.
+        </div>
+      </div>
+
+      <div class="tl-item" style="--dot-color: #d29922">
+        <div class="tl-year">2020–2022 · The Bubble Seasons & Impact Player Era</div>
+        <div class="tl-title">Pandemic Bubbles Compress — Skills Sharpen</div>
+        <div class="tl-body">
+          The UAE and neutral-venue seasons during COVID compressed the ecosystem. <strong>Bowlers' economies suffered</strong> as batsmen practised obsessively on flat pitches. The era of <strong>Suryakumar Yadav's 360-degree batting</strong> arrived — the modern embodiment of the "no bad ball" philosophy. Meanwhile, IPL expanded to <strong>10 teams</strong>, diluting bowling but enriching batting talent pools. The introduction of the <strong>Impact Player rule in 2023</strong> gave teams an extra batting slot — dramatically compressing bowling resources further.
+        </div>
+      </div>
+
+      <div class="tl-item" style="--dot-color: #f85149">
+        <div class="tl-year">2023–2026 · The Modern Batting Supremacy</div>
+        <div class="tl-title">Batsmen Have Won. Completely.</div>
+        <div class="tl-body">
+          The dataset's current median of <strong>167 runs</strong> and mean of <strong>163 runs</strong> represents the culmination of 18 years of evolution. <strong>34% of innings now score 180+.</strong> The Impact Player rule means teams carry 7 specialist batsmen. Young batsmen enter IPL already trained on the "attack from ball one" philosophy. Strike rates above 150 are now the benchmark for quality batting. Meanwhile, <strong>bowler economy below 8.0</strong> is considered elite — a standard that would have been mediocre a decade ago. Batting has won the arms race.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 7: KEY INSIGHTS -->
+<section>
+  <div class="container">
+    <div class="section-label">Takeaways</div>
+    <div class="section-title">What the Data Tells Us</div>
+    <div class="insights-grid">
+      <div class="insight-card">
+        <div class="insight-icon">📈</div>
+        <div class="insight-title">The 160 is the New 130</div>
+        <div class="insight-body">In early IPL, 160 was a competitive total. Today, with <strong>P50 at 167 and P25 at 148</strong>, even a below-average innings reaches 148. The floor of competitiveness has risen dramatically.</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-icon">🏏</div>
+        <div class="insight-title">Openers Are the Kingmakers</div>
+        <div class="insight-body">Positions 1 & 2 have the <strong>highest strike rates (136–138)</strong>, reflecting teams' philosophy of maximum damage in the powerplay. A big powerplay score is the strongest predictor of a large total.</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-icon">⚰️</div>
+        <div class="insight-title">Middle Overs Are No Refuge</div>
+        <div class="insight-body">Spinners and medium-pacers in overs 7–15 concede <strong>7.5 economy on average</strong>. The myth of the "dot ball phase" is largely dead — batsmen rotate and attack in equal measure.</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-icon">🎯</div>
+        <div class="insight-title">Wickets No Longer Brake Teams</div>
+        <div class="insight-body">Teams average only <strong>1.66 wickets lost by powerplay end</strong> — and still maintain near-identical run rates whether they have 8 wickets left or 5. Modern batting depth is a genuine weapon.</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-icon">💸</div>
+        <div class="insight-title">Death Bowling is the Most Expensive Skill</div>
+        <div class="insight-body">Average economy in overs 16–20 is <strong>8.2</strong>. Bowlers who consistently go at under 8.0 in this phase are arguably the most valuable commodity in the IPL auction.</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-icon">🔄</div>
+        <div class="insight-title">The 2012 Gayle Effect</div>
+        <div class="insight-body">Chris Gayle's 175* in 2012 remains the single biggest psychological shift in IPL batting history — it proved 200 was reachable, and teams never looked back. It's the era's watershed moment.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="footer">
+  Data sourced from Cricsheet IPL archives · Covers all IPL matches up to April 28, 2026 · 287,353 deliveries · 1,575 innings
+</div>
+
+<script>
+// Common chart defaults
+Chart.defaults.color = '#8b949e';
+Chart.defaults.borderColor = '#30363d';
+Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+
+const ORANGE = '#f0883e';
+const BLUE = '#58a6ff';
+const GREEN = '#3fb950';
+const PURPLE = '#bc8cff';
+const GOLD = '#d29922';
+const RED = '#f85149';
+
+// 1. Score Distribution Bar Chart
+new Chart(document.getElementById('scoreDistChart'), {
+  type: 'bar',
+  data: {
+    labels: ['< 120', '120–140', '140–160', '160–180', '180–200', '200–220', '220+'],
+    datasets: [{
+      label: '% of innings',
+      data: [3.7, 13.2, 24.1, 25.5, 18.5, 10.1, 4.9],
+      backgroundColor: [RED, GOLD, BLUE, GREEN, ORANGE, PURPLE, '#ff6b6b'],
+      borderRadius: 6,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => `${ctx.parsed.y}% of innings` } }
+    },
+    scales: {
+      y: {
+        grid: { color: '#21262d' },
+        ticks: { callback: v => v + '%' },
+        title: { display: true, text: '% of innings', color: '#8b949e', font: { size: 11 } }
+      },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// 2. 1st vs 2nd innings
+new Chart(document.getElementById('inningsCompChart'), {
+  type: 'bar',
+  data: {
+    labels: ['1st Innings', '2nd Innings'],
+    datasets: [
+      {
+        label: 'Mean Score',
+        data: [171.6, 163.0],
+        backgroundColor: [ORANGE, BLUE],
+        borderRadius: 8,
+        borderSkipped: false,
+      },
+      {
+        label: 'Median Score',
+        data: [170, 160],
+        backgroundColor: [ORANGE + '66', BLUE + '66'],
+        borderRadius: 8,
+        borderSkipped: false,
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 16 } } },
+    scales: {
+      y: {
+        grid: { color: '#21262d' },
+        min: 140,
+        title: { display: true, text: 'Runs', color: '#8b949e', font: { size: 11 } }
+      },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// 3. Runs per over (line chart)
+new Chart(document.getElementById('overRunsChart'), {
+  type: 'line',
+  data: {
+    labels: Array.from({length: 20}, (_, i) => `Over ${i+1}`),
+    datasets: [{
+      label: 'Runs per Over',
+      data: [6.42, 12.87, 14.74, 15.63, 15.86, 15.83, 14.21, 13.32, 14.07, 14.12, 14.22, 14.67, 14.91, 15.03, 15.59, 16.31, 16.85, 18.11, 18.76, 20.19],
+      borderColor: ORANGE,
+      backgroundColor: ORANGE + '18',
+      fill: true,
+      tension: 0.4,
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      pointBackgroundColor: ORANGE,
+      borderWidth: 2.5,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => `${ctx.parsed.y.toFixed(1)} runs` } },
+      annotation: {}
+    },
+    scales: {
+      y: {
+        grid: { color: '#21262d' },
+        title: { display: true, text: 'Avg runs in over', color: '#8b949e', font: { size: 11 } }
+      },
+      x: {
+        grid: { display: false },
+        ticks: { maxRotation: 45, font: { size: 10 } }
+      }
+    }
+  }
+});
+
+// 4. SR by batting position
+new Chart(document.getElementById('srByPosChart'), {
+  type: 'bar',
+  data: {
+    labels: ['#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8', '#9', '#10'],
+    datasets: [{
+      label: 'Mean Strike Rate',
+      data: [136.5, 138.3, 134.2, 128.2, 127.8, 129.1, 129.0, 129.1, 110.1, 87.3],
+      backgroundColor: [
+        ORANGE, ORANGE, GREEN, BLUE, BLUE, PURPLE, PURPLE, GOLD, GOLD, RED
+      ],
+      borderRadius: 6, borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => `SR: ${ctx.parsed.y.toFixed(1)}` } }
+    },
+    scales: {
+      y: {
+        grid: { color: '#21262d' },
+        min: 70,
+        title: { display: true, text: 'Strike Rate', color: '#8b949e', font: { size: 11 } }
+      },
+      x: {
+        grid: { display: false },
+        title: { display: true, text: 'Batting Position', color: '#8b949e', font: { size: 11 } }
+      }
+    }
+  }
+});
+
+// 5. Death over strike rates
+new Chart(document.getElementById('deathSRChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Top Order\n(Pos 1–3)', 'Middle Order\n(Pos 4–6)', 'Lower Order\n(Pos 7+)'],
+    datasets: [{
+      label: 'Strike Rate (Overs 16–20)',
+      data: [148.2, 140.6, 127.9],
+      backgroundColor: [ORANGE, GREEN, BLUE],
+      borderRadius: 8, borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => `SR: ${ctx.parsed.y.toFixed(1)}` } }
+    },
+    scales: {
+      y: { grid: { color: '#21262d' }, min: 100 },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// 6. Wickets by phase
+new Chart(document.getElementById('wicketsPhaseChart'), {
+  type: 'bar',
+  data: {
+    labels: ['End of Powerplay\n(Over 6)', 'End of Middle\n(Over 15)', 'End of Innings\n(Over 20)'],
+    datasets: [{
+      label: 'Avg Wickets Lost',
+      data: [1.66, 4.09, 6.48],
+      backgroundColor: [GREEN, GOLD, RED],
+      borderRadius: 8, borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => `${ctx.parsed.y.toFixed(2)} wickets` } }
+    },
+    scales: {
+      y: { grid: { color: '#21262d' }, max: 10, title: { display: true, text: 'Avg wickets lost', color: '#8b949e', font: { size: 11 } } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// 7. Economy by phase (grouped)
+new Chart(document.getElementById('economyPhaseChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Powerplay (Overs 1–6)', 'Middle Overs (7–15)', 'Death Overs (16–20)'],
+    datasets: [
+      {
+        label: 'Average Economy',
+        data: [7.01, 7.51, 8.17],
+        backgroundColor: [GREEN, GOLD, RED],
+        borderRadius: 8, borderSkipped: false,
+      },
+      {
+        label: 'Median Economy',
+        data: [6.67, 7.13, 7.89],
+        backgroundColor: [GREEN + '88', GOLD + '88', RED + '88'],
+        borderRadius: 8, borderSkipped: false,
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 16 } } },
+    scales: {
+      y: {
+        grid: { color: '#21262d' },
+        min: 5,
+        title: { display: true, text: 'Economy rate (runs per over)', color: '#8b949e', font: { size: 11 } }
+      },
+      x: { grid: { display: false } }
+    }
+  }
+});
+</script>
+</body>
+</html>
