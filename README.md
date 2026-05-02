@@ -1,4 +1,4 @@
-# IPL Ball-by-Ball Dataset for Score Prediction
+# How batting has changed over time in IPL
 
 ## Overview
 
