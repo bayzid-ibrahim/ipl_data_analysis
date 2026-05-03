@@ -181,4 +181,3 @@ batting evolution by era.
 
 Raw cricket data from [Cricsheet](https://cricsheet.org/).  
 Dataset engineering and feature creation via `build_dataset.py`.  
-Analysis notebook by Bayzid.
